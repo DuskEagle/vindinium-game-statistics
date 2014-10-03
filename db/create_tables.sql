@@ -72,33 +72,6 @@ CREATE TABLE Mines(
     heroId INT REFERENCES Heroes,
     previousMineId INT REFERENCES Mines(id)
 );
-
----CREATE FUNCTION INSERT_IF_UNIQUE (sql_insert TEXT)
----    RETURNS VOID
----    LANGUAGE plpgsql
----AS $$
----BEGIN
----    EXECUTE sql_insert;
----    RETURN;
----    EXCEPTION WHEN unique_violation THEN
----    RETURN;
----END;
----$$;
-
----DROP FUNCTION MINIMUM;
----CREATE FUNCTION MINIMUM(anyarray)
----    returns anyelement as $$
----    select min($1[i]) from generate_series(array_lower($1,1),
----    array_upper($1,1)) g(i);
----    $$ language sql immutable strict;
-    
----DROP FUNCTION IF EXISTS MINIMUM_AMONG_INDICES;
----CREATE FUNCTION MINIMUM_AMONG_INDICES(anyarray)
----    returns anyelement as $$
----    select min($1[i]) from generate_series(array_lower($1,1),
----    array_upper($1,1)) g(i);
----
----$$ LANGUAGE plpgsql STABLE;
     
 COMMIT;
 
