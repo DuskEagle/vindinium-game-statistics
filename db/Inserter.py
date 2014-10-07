@@ -3,7 +3,7 @@ sys.path.insert(0, "../game")
 
 import ast
 import datetime
-import logging
+import logging as _logging
 import numpy as np
 import psycopg2 as psycopg
 from multiprocessing import Lock
@@ -14,18 +14,10 @@ from game import Game
 class Inserter():
     insert_user_lock = Lock()
     
-    def __init__(self, dbname="vindinium", dbuser="postgres"):
-        self.connection = psycopg.connect("dbname=" + dbname + " user=" + dbuser)
+    def __init__(self, database_name="vindinium", database_user="postgres", logger=_logging.getLogger("Inserter")):
+        self.connection = psycopg.connect("dbname=" + database_name + " user=" + database_user)
         self.db = self.connection.cursor()
-        self.logger = self.configureLogger(logging.DEBUG)
-        
-    def configureLogger(self, log_level):
-        logger = logging.getLogger("Inserter")
-        stdout_handler = logging.StreamHandler(sys.stdout)
-        stdout_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-        logger.addHandler(stdout_handler)
-        logger.setLevel(log_level)
-        return logger
+        self.logger = logger
     
     def insertGame(self, game_strings):
         """ game_strings : list of strings, each of which represents one turn
@@ -52,6 +44,7 @@ class Inserter():
             freshly_dead_heroes = Game.getFreshlyDeadHeroes(old_game, game)
         
         turn_id = self._insertTurnToDB(game, state)
+        self.logger.debug("Game: " + str(game.gameId) + ", Turn: " + str(game.turn))
         
         hero_ids = []
         for hero in game.heroes:
@@ -64,7 +57,7 @@ class Inserter():
     def _insertGame(self, first_turn_string):
         state = Inserter._parseJson(first_turn_string)
         game = Game(state, False)
-        logging.info("Inserting " + game.gameId + " to database.")
+        self.logger.info("Inserting " + game.gameId + " to database.")
         
         self._insertGameToDB(game)
         self._insertOrUpdateBots(game)

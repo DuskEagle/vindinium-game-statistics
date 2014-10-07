@@ -1,11 +1,13 @@
+import logging as _logging
 import requests
 
 class Streamer():
     
-    def __init__(self, url):
+    def __init__(self, url, logger=_logging.getLogger("Streamer")):
         self.url = url
         req = requests.Request("GET", self.url).prepare()
-        self.connection = requests.Session().send(req, stream=True)      
+        self.connection = requests.Session().send(req, stream=True)
+        self.logger = logger
     
     def stream(self):
         """ Returns one line of stream data from URL. Waits if no line is on the

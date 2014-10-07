@@ -27,10 +27,10 @@ To set up the database schema:
 In the shell that opens up, type the following commands:
 
 ```
-CREATE DATABASE vindinium
-CREATE USER <your-unix-username>
-GRANT ALL PRIVELEGES ON DATABASE vindinium TO <your-unix-username>
-CREATE EXTENSION intarray
+CREATE DATABASE vindinium;
+CREATE USER <your-unix-username>;
+GRANT ALL PRIVELEGES ON DATABASE vindinium TO <your-unix-username>;
+CREATE EXTENSION intarray;
 ```
 
 Exit the psql shell, then run
@@ -41,4 +41,6 @@ This creates all of the tables needed for the project.
 
 To start streaming games from the Vindinium server to your Postgres database,
 
-```python3 StreamInserter.py```
+```python3 StreamInserter.py vindinium <your-unix-name> {optional alternate server url} {optional log level}```
+
+optional log level can be one of "debug", "info", "warn", "error", or "critical".
