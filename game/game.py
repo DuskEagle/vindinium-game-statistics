@@ -302,8 +302,8 @@ class Hero:
     def __init__(self, hero):
         self.name = hero["name"]
         self.heroId = hero["id"]
-        self.userId = hero["userId"]
-        self.elo = hero["elo"]
+        self.userId = hero.get("userId") # Training bots lack this
+        self.elo = hero.get("elo")
         # NOTE: The state we receive from the server has the x and y
         # values backward. We fix that here.
         self.pos = (hero["pos"]["y"],hero["pos"]["x"])
