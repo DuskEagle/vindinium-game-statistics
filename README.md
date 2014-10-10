@@ -13,12 +13,12 @@ less than twenty health with no other hero within 3 spaces of them end up dying.
 **This project is still a work-in-progress and should not be expected to work 
 flawlessly yet. In addition, the database schema is still subject to change.**
 
-Running this project requires Python 3, pip, PostgreSQL and PSQL installed on 
-your system.
+Running this project requires Python 3, pip, PostgreSQL (with development
+headers), and a PostgreSQL server installed and running on your system.
 
 To install the necessary Python 3 libraries:
 
-```sudo pip install -r REQUIREMENTS.txt```
+```sudo pip3 install -r REQUIREMENTS.txt```
 
 To set up the database schema:
 
@@ -28,8 +28,8 @@ In the shell that opens up, type the following commands:
 
 ```
 CREATE DATABASE vindinium;
-CREATE USER <your-unix-username>;
-GRANT ALL PRIVELEGES ON DATABASE vindinium TO <your-unix-username>;
+CREATE USER "<your-system-username>";
+GRANT ALL PRIVELEGES ON DATABASE vindinium TO "<your-system-username>";
 CREATE EXTENSION intarray;
 ```
 
@@ -41,6 +41,6 @@ This creates all of the tables needed for the project.
 
 To start streaming games from the Vindinium server to your Postgres database,
 
-```python3 StreamInserter.py vindinium <your-unix-name> {optional alternate server url} {optional log level}```
+```python3 StreamInserter.py vindinium <your-system-username> {optional alternate server url} {optional log level}```
 
 optional log level can be one of "debug", "info", "warn", "error", or "critical".
