@@ -30,7 +30,7 @@ In the shell that opens up, type the following commands:
 
 Exit the psql shell, then run
 
-    psql -d vindinium -f create_tables.sql
+    psql -d vindinium -f db/create_tables.sql
 
 This creates all of the tables needed for the project.
 
