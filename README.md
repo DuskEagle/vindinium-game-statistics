@@ -36,6 +36,6 @@ This creates all of the tables needed for the project.
 
 To start streaming games from the Vindinium server to your Postgres database,
 
-    python3 StreamInserter.py vindinium <your-system-username> {optional alternate server url} {optional log level}
+    python3 db/StreamInserter.py vindinium <your-system-username> {optional alternate server url} {optional log level}
 
 Optional log level can be one of "debug", "info", "warn", "error", or "critical".
