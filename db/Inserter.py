@@ -32,6 +32,19 @@ class Inserter():
             if len(turn_string) > 0:
                 game = self.insertTurn(turn_string, game)
                 self.connection.commit()
+        
+        # TODO: Previous IDs make everything to slow at the moment.
+        # They have been temporarily disabled while deciding what to do about
+        # that. Perhaps we can simply use custom SQL functions that emulate
+        # their functionality for querying purposes.
+        #self._setPreviousIds(game)
+        
+        """ game.finished should always be true at this point, but in the event
+        of an error we check anyway. Worst case, we never set Games.finished to
+        true in the DB and our queries will just ignore this game. """
+        if game.finished:
+            self._setGameFinished(game)
+        self.connection.commit()
     
     def insertTurn(self, turn_string, old_game):
         """ Insert turn represented by turn_string into database. """
@@ -115,27 +128,21 @@ class Inserter():
         return ast.literal_eval("{\"game\":" + string.replace(":false}", ":False}").replace(":true}", ":True}") + "}")
 
     def _insertTurnToDB(self, game, state):
-        if game.finished:
-            self.db.execute(
-                "UPDATE GAMES "
-                "    SET finished = TRUE "
-                "WHERE gameId = %s;",
-                (game.gameId,))
-        
         self.db.execute(
             "INSERT INTO Turns "
-            "    (gameId, turn, rawJSON, previousTurnId) "
-            "VALUES (%(gameId)s, %(turn)s, %(rawJSON)s, "
-            "    (SELECT t.id FROM Turns t "
-            "    LEFT JOIN Turns t_later "
-            "        ON t_later.gameId = t.gameid "
-            "        AND t_later.previousTurnId = t.id "
-            "    WHERE t.gameId = %(gameId)s "
-            "        AND t_later.id IS NULL)) "
+            "    (gameId, turn) "
+            "VALUES (%(gameId)s, %(turn)s) "
             "RETURNING id;",
-            {"gameId": game.gameId, "turn": game.turn, "rawJSON": Json(state)})
+            {"gameId": game.gameId, "turn": game.turn})
         return self.db.fetchone()[0]
-        
+    
+    def _setGameFinished(self, game):
+        self.db.execute(
+            "UPDATE GAMES "
+            "    SET finished = TRUE "
+            "WHERE gameId = %s;",
+            (game.gameId,))
+    
     def _insertHeroToDB(self, game, hero, turn_id, died):
         bfs_map = game.board.bfs(hero.pos, False, fill_value=2**31-1)
         obstructed_bfs_map = game.board.bfs(hero.pos, True, fill_value=2**31-1)
@@ -189,20 +196,52 @@ class Inserter():
             
             self.db.execute(
                 "INSERT INTO Mines "
-                "    (gameId, turnId, mineNumber, pos, heroId, previousMineId) "
-                "VALUES (%(gameId)s, %(turnId)s, %(mineNumber)s, %(pos)s, %(heroId)s, "
-                "    (SELECT m.id FROM Mines m "
-                "    LEFT JOIN Mines m_later "
-                "        ON m_later.gameId = m.gameId "
-                "        AND m_later.mineNumber = m.mineNumber "
-                "        AND m_later.previousMineId = m.id "
-                "    WHERE m.gameId = %(gameId)s "
-                "    AND m.mineNumber = %(mineNumber)s "
-                "    AND m_later.id IS NULL));",
+                "    (gameId, turnId, mineNumber, pos, heroId) "
+                "VALUES (%(gameId)s, %(turnId)s, %(mineNumber)s, %(pos)s, %(heroId)s);", 
                 {"gameId": game.gameId, "turnId": turn_id, "mineNumber": mine_number+1, \
                 "pos": list(mine_pos), "heroId": hero_id})
 
-
+    def _setPreviousIds(self, game):
+        """ Sets Turns.previousTurnId and Mines.previousMinesId for all turns
+        and mines associated with "game". This is done afterward as it results
+        in significant speedups versus setting these values while they're being
+        inserted. """
+        
+        self._setPreviousTurnIds(game)
+        self._setPreviousMineIds(game)
+        
+    def _setPreviousTurnIds(self, game):
+        """ See self._setPreviousIds. """
+        
+        self.db.execute(
+            "UPDATE Turns t_later "
+            "SET previousTurnId = t.id "
+            "    FROM Turns t "
+            "WHERE t.gameId = t_later.gameId "
+            "    AND t.turn + 1 = t_later.turn "
+            "    AND t.gameId = %s;",
+            (game.gameId,))
+    
+    def _setPreviousMineIds(self, game):
+        """ See self._setPreviousIds. Must be called after
+        self._setPreviousTurnIds """
+        
+        self.db.execute(
+            "UPDATE Mines m_later "
+            "SET previousMineId = m.id "
+            "    FROM Mines m "
+            "WHERE m_later.id = "
+            "    (SELECT m_later.id "
+            "        FROM Mines m_later "
+            "    JOIN Turns t_later "
+            "        ON t_later.id = m_later.turnId "
+            "    JOIN Turns t "
+            "        ON t.id = t_later.previousTurnId "
+            "    WHERE m_later.gameId = m.gameId "
+            "        AND m_later.mineNumber = m.mineNumber "
+            "        AND m.turnId = t.id) "
+            "    AND m_later.gameId = %s;",
+            (game.gameId,))
 
 if __name__ == "__main__":
     inserter = Inserter()

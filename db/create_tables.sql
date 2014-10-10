@@ -30,7 +30,7 @@ CREATE TABLE Turns (
     id SERIAL PRIMARY KEY,
     gameId VARCHAR(8) NOT NULL REFERENCES Games,
     turn INT NOT NULL,
-    rawJSON JSON NOT NULL,
+    --rawJSON JSON NOT NULL,
     previousTurnId INT REFERENCES Turns(id),
     UNIQUE (gameId, turn)
 );
@@ -72,7 +72,7 @@ CREATE TABLE Mines(
     heroId INT REFERENCES Heroes,
     previousMineId INT REFERENCES Mines(id)
 );
-    
+
 COMMIT;
 
 
