@@ -30,8 +30,6 @@ CREATE TABLE Turns (
     id SERIAL PRIMARY KEY,
     gameId VARCHAR(8) NOT NULL REFERENCES Games,
     turn INT NOT NULL,
-    --rawJSON JSON NOT NULL,
-    previousTurnId INT REFERENCES Turns(id),
     UNIQUE (gameId, turn)
 );
 
@@ -58,8 +56,7 @@ CREATE TABLE Heroes(
     tavernDistances INT[] NOT NULL,
     tavernObstructedDistances INT[] NOT NULL,
     mineDistances INT[] NOT NULL,
-    mineObstructedDistances INT[] NOT NULL,
-    previousHeroId INT REFERENCES HEROES(id)
+    mineObstructedDistances INT[] NOT NULL
 );
 
 DROP TABLE IF EXISTS Mines CASCADE;
@@ -69,8 +66,7 @@ CREATE TABLE Mines(
     turnId INT NOT NULL REFERENCES Turns(id),
     mineNumber INT NOT NULL,
     pos INT[] NOT NULL,
-    heroId INT REFERENCES Heroes,
-    previousMineId INT REFERENCES Mines(id)
+    heroId INT REFERENCES Heroes
 );
 
 COMMIT;
